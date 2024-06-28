@@ -130,13 +130,13 @@ function App() {
               <Label htmlFor="qrType">QR Code Type</Label>
               <Select value={qrType} onValueChange={setQrType}>
                 <SelectTrigger>
-                  <SelectValue style={{color:'black'}} placeholder="Select QR Code Type" />
+                  <SelectValue style={{ color: 'black' }} placeholder="Select QR Code Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="URL" style={{ color: 'black' }}>URL</SelectItem>
-                  <SelectItem value="Text" style={{ color: 'black' }}>Text</SelectItem>
-                  <SelectItem value="Email" style={{ color: 'black' }}>Email</SelectItem>
-                  <SelectItem value="Phone" style={{ color: 'black' }}>Phone</SelectItem>
+                  <SelectItem value="URL"><span style={{ color: 'black' }}>URL</span></SelectItem>
+                  <SelectItem value="Text"><span style={{ color: 'black' }}>Text</span></SelectItem>
+                  <SelectItem value="Email"><span style={{ color: 'black' }}>Email</span></SelectItem>
+                  <SelectItem value="Phone"><span style={{ color: 'black' }}>Phone</span></SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -3,7 +3,9 @@ body {
   padding: 0;
   overflow: hidden;
 }
-
+.selectValue {
+  color: black !important; /* Use !important to override other styles if necessary */
+}
 canvas {
   display: block;
 }
