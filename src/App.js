@@ -17,6 +17,18 @@ function App() {
   const [qrType, setQrType] = useState('URL');
   const [errorCorrection, setErrorCorrection] = useState('L');
   const [animationIndex, setAnimationIndex] = useState(0);
+  const [tooltipContent, setTooltipContent] = useState('');
+  const [showTooltip, setShowTooltip] = useState(false);
+
+
+  const handleMouseEnter = (content) => {
+    setTooltipContent(content);
+    setShowTooltip(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+  };
 
   const animations = [starryNight, floatingBubbles, gradientWave, particleNetwork];
 
@@ -90,6 +102,9 @@ function App() {
         console.error('Error generating PDF:', error);
       });
   };
+  const handleErrorCorrection = (value) => {
+    setErrorCorrection(value);
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4">
@@ -107,6 +122,7 @@ function App() {
                 type="text"
                 placeholder="Enter URL"
                 value={url}
+                color="black"
                 onChange={(e) => setUrl(e.target.value)}
               />
             </div>
@@ -114,13 +130,13 @@ function App() {
               <Label htmlFor="qrType">QR Code Type</Label>
               <Select value={qrType} onValueChange={setQrType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select QR Code Type" />
+                  <SelectValue style={{color:'black'}} placeholder="Select QR Code Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="URL"><span style={{ color: 'black' }}>URL</span></SelectItem>
-                  <SelectItem value="Text"><span style={{ color: 'black' }}>Text</span></SelectItem>
-                  <SelectItem value="Email"><span style={{ color: 'black' }}>Email</span></SelectItem>
-                  <SelectItem value="Phone"><span style={{ color: 'black' }}>Phone</span></SelectItem>
+                  <SelectItem value="URL" style={{ color: 'black' }}>URL</SelectItem>
+                  <SelectItem value="Text" style={{ color: 'black' }}>Text</SelectItem>
+                  <SelectItem value="Email" style={{ color: 'black' }}>Email</SelectItem>
+                  <SelectItem value="Phone" style={{ color: 'black' }}>Phone</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -147,16 +163,21 @@ function App() {
                   />
                 </div>
                 <div className="space-y-2">
+                  {showTooltip && (
+                    <div style={{ position: 'absolute', border: '1px solid #ccc', padding: '10px', backgroundColor: '#f9f9f9', color: 'black' }}>
+                      {tooltipContent}
+                    </div>
+                  )}
                   <Label htmlFor="errorCorrection">Error Correction Level</Label>
-                  <Select value={errorCorrection} onValueChange={setErrorCorrection}>
+                  <Select value={errorCorrection} onValueChange={handleErrorCorrection}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Error Correction Level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="L">L - Low</SelectItem>
-                      <SelectItem value="M">M - Medium</SelectItem>
-                      <SelectItem value="Q">Q - Quartile</SelectItem>
-                      <SelectItem value="H">H - High</SelectItem>
+                      <SelectItem value="L" title="Low: Can restore up to 7% of data" onMouseEnter={() => handleMouseEnter("Low: Can restore up to 7% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>L - Low</span></SelectItem>
+                      <SelectItem value="M" title="Medium: Can restore up to 15% of data" onMouseEnter={() => handleMouseEnter("Medium: Can restore up to 15% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>M - Medium</span></SelectItem>
+                      <SelectItem value="Q" title="Quartile: Can restore up to 25% of data" onMouseEnter={() => handleMouseEnter("Quartile: Can restore up to 25% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>Q - Quartile</span></SelectItem>
+                      <SelectItem value="H" title="High: Can restore up to 30% of data" onMouseEnter={() => handleMouseEnter("High: Can restore up to 30% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>H - High</span></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
