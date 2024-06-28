@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Label } from "./components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
-import { starryNight, floatingBubbles, gradientWave, particleNetwork } from './backgroundAnimations';
+import { starryNight, floatingBubbles, gradientWave, particleNetwork, galaxySpiral } from './backgroundAnimations';
 
 function App() {
   const [url, setUrl] = useState('');
@@ -20,7 +20,7 @@ function App() {
   const [animationIndex, setAnimationIndex] = useState(0);
   const [qrKey, setQrKey] = useState(0);
 
-  const animations = [starryNight, floatingBubbles, gradientWave, particleNetwork];
+  const animations = [starryNight, floatingBubbles, gradientWave, particleNetwork, galaxySpiral];
 
   const animate = useCallback(() => {
     const canvas = document.getElementById('background-canvas');
@@ -97,7 +97,7 @@ function App() {
   const handleErrorCorrection = (value) => {
     setErrorCorrection(value);
     setQrKey(prevKey => prevKey + 1);
-  }
+  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4">
