@@ -7,6 +7,7 @@ import { Button } from "./components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Label } from "./components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
 import { starryNight, floatingBubbles, gradientWave, particleNetwork } from './backgroundAnimations';
 
 function App() {
@@ -15,20 +16,9 @@ function App() {
   const [color, setColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
   const [qrType, setQrType] = useState('URL');
-  const [errorCorrection, setErrorCorrection] = useState('L');
+  const [errorCorrection, setErrorCorrection] = useState('H');
   const [animationIndex, setAnimationIndex] = useState(0);
-  const [tooltipContent, setTooltipContent] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false);
-
-
-  const handleMouseEnter = (content) => {
-    setTooltipContent(content);
-    setShowTooltip(true);
-  };
-
-  const handleMouseLeave = () => {
-    setShowTooltip(false);
-  };
+  const [qrKey, setQrKey] = useState(0);
 
   const animations = [starryNight, floatingBubbles, gradientWave, particleNetwork];
 
@@ -68,6 +58,7 @@ function App() {
   const handleGenerateQR = () => {
     if (url.trim() !== '') {
       setQrVisible(true);
+      setQrKey(prevKey => prevKey + 1);
     } else {
       alert('Please enter a valid URL.');
     }
@@ -102,8 +93,10 @@ function App() {
         console.error('Error generating PDF:', error);
       });
   };
+
   const handleErrorCorrection = (value) => {
     setErrorCorrection(value);
+    setQrKey(prevKey => prevKey + 1);
   }
 
   return (
@@ -122,21 +115,21 @@ function App() {
                 type="text"
                 placeholder="Enter URL"
                 value={url}
-                color="black"
+                className="text-black"
                 onChange={(e) => setUrl(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="qrType">QR Code Type</Label>
               <Select value={qrType} onValueChange={setQrType}>
-                <SelectTrigger>
-                  <SelectValue style={{ color: 'black' }} placeholder="Select QR Code Type" />
+                <SelectTrigger className="bg-white text-black">
+                  <SelectValue placeholder="Select QR Code Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="URL"><span style={{ color: 'black' }}>URL</span></SelectItem>
-                  <SelectItem value="Text"><span style={{ color: 'black' }}>Text</span></SelectItem>
-                  <SelectItem value="Email"><span style={{ color: 'black' }}>Email</span></SelectItem>
-                  <SelectItem value="Phone"><span style={{ color: 'black' }}>Phone</span></SelectItem>
+                  <SelectItem value="URL" className="text-black">URL</SelectItem>
+                  <SelectItem value="Text" className="text-black">Text</SelectItem>
+                  <SelectItem value="Email" className="text-black">Email</SelectItem>
+                  <SelectItem value="Phone" className="text-black">Phone</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -150,7 +143,10 @@ function App() {
                     id="qrColor"
                     type="color"
                     value={color}
-                    onChange={(e) => setColor(e.target.value)}
+                    onChange={(e) => {
+                      setColor(e.target.value);
+                      setQrKey(prevKey => prevKey + 1);
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
@@ -159,30 +155,45 @@ function App() {
                     id="bgColor"
                     type="color"
                     value={bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
+                    onChange={(e) => {
+                      setBgColor(e.target.value);
+                      setQrKey(prevKey => prevKey + 1);
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
-                  {showTooltip && (
-                    <div style={{ position: 'absolute', border: '1px solid #ccc', padding: '10px', backgroundColor: '#f9f9f9', color: 'black' }}>
-                      {tooltipContent}
-                    </div>
-                  )}
                   <Label htmlFor="errorCorrection">Error Correction Level</Label>
-                  <Select value={errorCorrection} onValueChange={handleErrorCorrection}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Error Correction Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="L" title="Low: Can restore up to 7% of data" onMouseEnter={() => handleMouseEnter("Low: Can restore up to 7% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>L - Low</span></SelectItem>
-                      <SelectItem value="M" title="Medium: Can restore up to 15% of data" onMouseEnter={() => handleMouseEnter("Medium: Can restore up to 15% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>M - Medium</span></SelectItem>
-                      <SelectItem value="Q" title="Quartile: Can restore up to 25% of data" onMouseEnter={() => handleMouseEnter("Quartile: Can restore up to 25% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>Q - Quartile</span></SelectItem>
-                      <SelectItem value="H" title="High: Can restore up to 30% of data" onMouseEnter={() => handleMouseEnter("High: Can restore up to 30% of data")} onMouseLeave={handleMouseLeave}><span style={{ color: 'black' }}>H - High</span></SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <TooltipProvider>
+                    <Select value={errorCorrection} onValueChange={handleErrorCorrection}>
+                      <SelectTrigger className="bg-white text-black">
+                        <SelectValue placeholder="Select Error Correction Level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['L', 'M', 'Q', 'H'].map((level) => (
+                          <Tooltip key={level}>
+                            <TooltipTrigger asChild>
+                              <SelectItem
+                                value={level}
+                                className={`text-black ${errorCorrection === level ? 'bg-blue-100' : ''}`}
+                              >
+                                {level} - {level === 'L' ? 'Low' : level === 'M' ? 'Medium' : level === 'Q' ? 'Quartile' : 'High'}
+                              </SelectItem>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{level === 'L' ? 'Low: Can restore up to 7% of data' :
+                                level === 'M' ? 'Medium: Can restore up to 15% of data' :
+                                  level === 'Q' ? 'Quartile: Can restore up to 25% of data' :
+                                    'High: Can restore up to 30% of data'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TooltipProvider>
                 </div>
                 <div className="flex justify-center items-center my-6">
-                  <div id="qr-code" className="bg-white p-4 rounded-md shadow-md">
+                  <div id="qr-code" key={qrKey} className="bg-white p-4 rounded-md shadow-md">
                     <QRCode value={url} size={200} fgColor={color} bgColor={bgColor} level={errorCorrection} />
                   </div>
                 </div>
