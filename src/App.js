@@ -117,10 +117,10 @@ function App() {
                   <SelectValue placeholder="Select QR Code Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="URL">URL</SelectItem>
-                  <SelectItem value="Text">Text</SelectItem>
-                  <SelectItem value="Email">Email</SelectItem>
-                  <SelectItem value="Phone">Phone</SelectItem>
+                  <SelectItem value="URL"><span style={{ color: 'black' }}>URL</span></SelectItem>
+                  <SelectItem value="Text"><span style={{ color: 'black' }}>Text</span></SelectItem>
+                  <SelectItem value="Email"><span style={{ color: 'black' }}>Email</span></SelectItem>
+                  <SelectItem value="Phone"><span style={{ color: 'black' }}>Phone</span></SelectItem>
                 </SelectContent>
               </Select>
             </div>
