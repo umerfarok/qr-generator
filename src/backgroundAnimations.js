@@ -145,22 +145,39 @@ export const particleNetwork = (canvas, ctx) => {
     }
   };
 };
-
-export const galaxySpiral = (canvas, ctx) => {
-  const stars = [];
-  const starCount = 2000;
+export const galaxySpiral = (canvas, ctx, speed = 0.0001) => {
+  const stars = initializeStars(canvas, 2000);
   let rotation = 0;
 
-  for (let i = 0; i < starCount; i++) {
-    const distance = Math.random() * canvas.width * 0.4;
-    const angle = Math.random() * Math.PI * 2;
-    stars.push({
-      x: Math.cos(angle) * distance,
-      y: Math.sin(angle) * distance,
-      radius: Math.random() * 1.5 + 0.5,
-      color: `hsl(${Math.random() * 60 + 200}, 80%, 70%)`,
-      angle: angle,
-      distance: distance
+  function initializeStars(canvas, starCount) {
+    const stars = [];
+    for (let i = 0; i < starCount; i++) {
+      const distance = Math.random() * canvas.width * 0.4;
+      const angle = Math.random() * Math.PI * 2;
+      stars.push({
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        radius: Math.random() * 1.5 + 0.5,
+        color: `hsl(${Math.random() * 60 + 200}, 80%, 70%)`,
+        angle: angle,
+        distance: distance
+      });
+    }
+    return stars;
+  }
+
+  function drawStars(ctx, stars, rotation, speed) {
+    stars.forEach(star => {
+      const x = Math.cos(star.angle) * star.distance;
+      const y = Math.sin(star.angle) * star.distance;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, star.radius, 0, Math.PI * 2);
+      ctx.fillStyle = star.color;
+      ctx.fill();
+      
+      // Adjust the angle increment here to control the speed of star rotation
+      star.angle += speed / (star.distance * 0.00008);
     });
   }
 
@@ -172,19 +189,10 @@ export const galaxySpiral = (canvas, ctx) => {
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(rotation);
     
-    stars.forEach(star => {
-      const x = Math.cos(star.angle) * star.distance;
-      const y = Math.sin(star.angle) * star.distance;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, star.radius, 0, Math.PI * 2);
-      ctx.fillStyle = star.color;
-      ctx.fill();
-      
-      star.angle += 0.0005 / (star.distance * 0.00001);
-    });
+    drawStars(ctx, stars, rotation, speed);
     
     ctx.restore();
-    rotation += 0.0005;
+    // Adjust the rotation increment here to control the speed of galaxy rotation
+    rotation += speed;
   };
 };
