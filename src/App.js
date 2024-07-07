@@ -11,7 +11,7 @@ import { Label } from "./components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
 
 function App() {
-  const animations = ['starryNight', 'floatingBubbles', 'gradientWave', 'particleNetwork', 'galaxySpiral', 'fireflies', 'matrixRain', 'rainbowWaves', 'quantumField', 'electricStorm', 'cosmicDust', 'neonPulse', 'auroraBorealis'];
+  const animations = ['autumnLeaves', 'oceanWaves', 'neuralNetwork', 'dnaHelix', 'geometricShapes', 'starryNight', 'floatingBubbles', 'gradientWave', 'particleNetwork', 'galaxySpiral', 'fireflies', 'matrixRain', 'rainbowWaves', 'quantumField', 'electricStorm', 'cosmicDust', 'neonPulse', 'auroraBorealis'];
 
   const getRandomAnimation = (exclude) => {
     let availableAnimations = animations.filter(animation => animation !== exclude);
