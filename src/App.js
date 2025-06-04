@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { 
   AnimatedBackground, 
   LayeredBackground, 
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Label } from "./components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
 import FeatureDemo from './components/FeatureDemo';
+import './App.css';
 
 function App() {
   // App mode switcher
@@ -35,11 +36,11 @@ function App() {
     return selected;
   }, [animations]);
 
-  // State management for QR Generator
-  const [animationName, setAnimationName] = useState('floatingBubbles'); // Fixed initial value
-  const [selectedTheme, setSelectedTheme] = useState('gaming');
+  // State management for QR Generator - Enhanced with better defaults
+  const [animationName, setAnimationName] = useState('particleNetwork'); // Better particle design than floatingBubbles
+  const [selectedTheme, setSelectedTheme] = useState('cyberpunk'); // More vibrant than gaming
   const [backgroundMode, setBackgroundMode] = useState('themed'); // 'themed', 'interactive', 'layered', 'controlled'
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState('https://animated-backgrounds-v2.com'); // Better example URL
   const [qrVisible, setQrVisible] = useState(false);
   const [color, setColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
@@ -47,6 +48,15 @@ function App() {
   const [errorCorrection, setErrorCorrection] = useState('H');
   const [qrKey, setQrKey] = useState(0);
   const [showControls, setShowControls] = useState(true);
+
+  // Enhanced v2.0 features state
+  const [enhancedMode, setEnhancedMode] = useState(true);
+  const [particleCount, setParticleCount] = useState(150); // Better particle count
+  const [animationSpeed, setAnimationSpeed] = useState(1.2); // Slightly faster
+  const [interactionStrength, setInteractionStrength] = useState(0.8);
+  const [enablePhysics, setEnablePhysics] = useState(false);
+  const [enableAI, setEnableAI] = useState(true);
+  const [showPerformance, setShowPerformance] = useState(false);
 
   // New v2.0 hooks
   const controls = useAnimationControls({
@@ -72,6 +82,44 @@ function App() {
     { animation: 'particleNetwork', opacity: 0.3, blendMode: 'screen', speed: 1.2 },
     { animation: 'cosmicDust', opacity: 0.5, blendMode: 'overlay', speed: 0.8 }
   ], []);
+
+  // QR Code state - Enhanced defaults
+  const [text, setText] = useState('https://animated-backgrounds-v2.com'); // Better default URL
+  const [qrCodeDataURL, setQRCodeDataURL] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // QR Code options - Enhanced defaults
+  const [options, setOptions] = useState({
+    errorCorrectionLevel: 'M',
+    type: 'image/png',
+    quality: 0.92,
+    margin: 1,
+    color: {
+      dark: '#1a1a1a', // Slightly softer black
+      light: '#FFFFFF'
+    },
+    width: 300, // Larger default size
+    scale: 4
+  });
+
+  // Background state - Enhanced defaults
+  const [backgroundConfig, setBackgroundConfig] = useState({
+    enabled: true,
+    type: 'animated', // Start with animated instead of static
+    staticColor: '#f8fafc',
+    gradientFrom: '#3b82f6',
+    gradientTo: '#8b5cf6',
+    animatedConfig: null
+  });
+
+  // Preview state
+  const [previewMode, setPreviewMode] = useState('desktop'); // 'desktop', 'tablet', 'mobile'
+  const [showPreview, setShowPreview] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Refs
+  const backgroundCanvasRef = useRef(null);
+  const qrDisplayRef = useRef(null);
 
   const handleGenerateQR = () => {
     if (url.trim() !== '') {
@@ -174,7 +222,7 @@ function App() {
         {/* App Mode Toggle */}
         <button
           onClick={() => setAppMode('feature-demo')}
-          className="fixed top-4 right-20 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           🎨 Feature Demo
         </button>
@@ -182,14 +230,14 @@ function App() {
         {/* Toggle Controls Button */}
         <button
           onClick={() => setShowControls(!showControls)}
-          className="fixed top-4 right-4 z-50 bg-white/20 backdrop-blur-lg text-white px-3 py-2 rounded-lg hover:bg-white/30 transition-colors"
+          className="fixed top-4 left-4 z-50 bg-white/20 backdrop-blur-lg text-white px-3 py-2 rounded-lg hover:bg-white/30 transition-colors"
         >
           {showControls ? '🔧 Hide Controls' : '🔧 Show Controls'}
         </button>
 
         {/* New v2.0 Controls Panel */}
         {showControls && (
-          <div className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-lg text-white p-4 rounded-lg max-w-sm">
+          <div className="fixed top-16 left-4 z-40 bg-white/10 backdrop-blur-lg text-white p-4 rounded-lg max-w-sm">
             <h3 className="text-lg font-semibold mb-3">🎨 v2.0 Features</h3>
             
             {/* Background Mode Selector */}
