@@ -201,7 +201,7 @@ function App() {
         );
       
       default: // 'themed'
-        return (
+  return (
           <AnimatedBackground 
             key="themed-bg"
             animationName={animationName}

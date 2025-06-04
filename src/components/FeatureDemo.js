@@ -227,10 +227,18 @@ const FeatureDemo = () => {
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: 0,
-        pointerEvents: 'none'
+        zIndex: 0
       }
     };
+
+    // Add pointerEvents: 'none' only for non-interactive demos
+    const addPointerEvents = (interactive = false) => ({
+      ...baseConfig,
+      style: {
+        ...baseConfig.style,
+        pointerEvents: interactive ? 'auto' : 'none'
+      }
+    });
 
     switch (activeDemo) {
       case 'showcase':
@@ -239,7 +247,7 @@ const FeatureDemo = () => {
             animationName={selectedAnimation}
             theme={selectedTheme}
             fps={Math.floor(60 * animationSpeed)}
-            {...baseConfig}
+            {...addPointerEvents(false)}
           />
         );
       
@@ -256,7 +264,7 @@ const FeatureDemo = () => {
               multiTouch: true
             }}
             theme={selectedTheme}
-            {...baseConfig}
+            {...addPointerEvents(true)}
           />
         );
       
@@ -265,7 +273,7 @@ const FeatureDemo = () => {
         return (
           <LayeredBackground 
             layers={selectedLayers}
-            {...baseConfig}
+            {...addPointerEvents(false)}
           />
         );
       
@@ -275,7 +283,7 @@ const FeatureDemo = () => {
             animationName="galaxySpiral"
             animationControls={controls}
             theme={selectedTheme}
-            {...baseConfig}
+            {...addPointerEvents(false)}
           />
         );
       
@@ -294,7 +302,7 @@ const FeatureDemo = () => {
             enableAudio={audioEnabled}
             enableAI={aiOptimization}
             enableDebug={enableDebugMode}
-            {...baseConfig}
+            {...addPointerEvents(true)}
           />
         );
       
@@ -303,7 +311,7 @@ const FeatureDemo = () => {
           <AnimatedBackground 
             animationName="particleNetwork"
             theme="cyberpunk"
-            {...baseConfig}
+            {...addPointerEvents(false)}
           />
         );
     }
