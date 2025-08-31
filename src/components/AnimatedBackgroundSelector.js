@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  AnimatedBackground,
+  useAnimationControls,
+  usePerformanceMonitor,
+  THEMES
+} from 'animated-backgrounds';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
@@ -7,14 +13,14 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  Settings, 
-  Palette, 
-  Zap, 
-  Music, 
+import {
+  Play,
+  Pause,
+  Square,
+  Settings,
+  Palette,
+  Zap,
+  Music,
   Activity,
   Download,
   Upload,
@@ -22,31 +28,12 @@ import {
   EyeOff
 } from 'lucide-react';
 
-// Import animated backgrounds (we'll need to add this as a dependency)
-// For now, we'll simulate the API
-const simulatedAnimatedBG = {
-  init: () => Promise.resolve({}),
-  getThemes: () => ['cyberpunk', 'nature', 'ocean', 'sunset', 'neon', 'space'],
-  getAnimations: () => ['particleNetwork', 'matrixRain', 'starryNight', 'oceanWaves', 'neonPulse'],
-  getPresets: () => ({
-    gaming: 'High-performance gaming experience',
-    portfolio: 'Professional portfolio background',
-    party: 'Vibrant audio-reactive effects',
-    minimal: 'Clean minimal design'
-  }),
-  detectCapabilities: () => ({
-    webgl: true,
-    audioContext: true,
-    getUserMedia: true
-  })
-};
-
 const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
   const canvasRef = useRef(null);
-  const [backgroundManager, setBackgroundManager] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   // Configuration state
   const [config, setConfig] = useState({
     preset: 'gaming',
@@ -59,99 +46,79 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
     enableAI: true,
     opacity: 0.8
   });
-  
-  // Performance metrics
-  const [metrics, setMetrics] = useState({
-    fps: 0,
-    particleCount: 0,
-    memoryUsage: 0
+
+  // Available animations from the package
+  const availableAnimations = [
+    'particleNetwork', 'matrixRain', 'starryNight', 'floatingBubbles',
+    'geometricShapes', 'galaxySpiral', 'fireflies', 'rainbowWaves',
+    'quantumField', 'electricStorm', 'cosmicDust', 'neonPulse',
+    'auroraBorealis', 'oceanWaves', 'autumnLeaves', 'dnaHelix'
+  ];
+
+  // Available themes from the package
+  const availableThemes = Object.keys(THEMES);
+
+  // Performance monitor hook
+  const performance = usePerformanceMonitor({
+    warningThreshold: 30,
+    autoOptimize: config.enableAI
   });
-  
-  // Available options
-  const [availableOptions, setAvailableOptions] = useState({
-    themes: [],
-    animations: [],
-    presets: {},
-    capabilities: {}
+
+  // Animation controls hook
+  const controls = useAnimationControls({
+    initialSpeed: config.animationSpeed,
+    autoPlay: isPlaying
   });
 
   // Initialize available options
   useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        const themes = simulatedAnimatedBG.getThemes();
-        const animations = simulatedAnimatedBG.getAnimations();
-        const presets = simulatedAnimatedBG.getPresets();
-        const capabilities = simulatedAnimatedBG.detectCapabilities();
-        
-        setAvailableOptions({
-          themes,
-          animations,
-          presets,
-          capabilities
-        });
-      } catch (error) {
-        console.error('Failed to load animated background options:', error);
-      }
+    // Available presets (these are just configuration presets, not package-provided)
+    const presets = {
+      gaming: 'High-performance gaming experience',
+      portfolio: 'Professional portfolio background',
+      party: 'Vibrant and dynamic effects',
+      minimal: 'Clean minimal design'
     };
-    
-    loadOptions();
+
+    // Check for browser capabilities
+    const capabilities = {
+      webgl: !!(window.WebGLRenderingContext),
+      audioContext: !!(window.AudioContext || window.webkitAudioContext),
+      getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+    };
+
+    // Update state with actual package data
+    setConfig(prev => ({
+      ...prev,
+      themes: availableThemes,
+      animations: availableAnimations,
+      presets,
+      capabilities
+    }));
   }, []);
 
-  // Initialize background
+  // Update controls when config changes
   useEffect(() => {
-    if (!canvasRef.current || !showPreview) return;
+    controls.setSpeed(config.animationSpeed);
+  }, [config.animationSpeed, controls]);
 
-    const initBackground = async () => {
-      try {
-        // Simulate background initialization
-        const manager = await simulatedAnimatedBG.init(canvasRef.current, {
-          animation: config.animation,
-          theme: config.theme,
-          enableAudio: config.enableAudio,
-          enablePhysics: config.enablePhysics,
-          enableAI: config.enableAI,
-          particleCount: config.particleCount,
-          autoStart: false
-        });
-        
-        setBackgroundManager(manager);
-        
-        // Simulate performance monitoring
-        const interval = setInterval(() => {
-          setMetrics({
-            fps: Math.floor(Math.random() * 20) + 40, // Simulate 40-60 FPS
-            particleCount: config.particleCount,
-            memoryUsage: Math.floor(Math.random() * 50) + 30 // Simulate 30-80MB
-          });
-        }, 1000);
-        
-        return () => clearInterval(interval);
-        
-      } catch (error) {
-        console.error('Failed to initialize animated background:', error);
-      }
-    };
-
-    initBackground();
-  }, [config.animation, config.theme, showPreview]);
-
-  // Update background when config changes
+  // Notify parent component about background changes
   useEffect(() => {
-    if (!backgroundManager) return;
-    
-    // Simulate updating the background configuration
-    console.log('Updating background with config:', config);
-    
-    // Notify parent component about background changes
     if (onBackgroundChange) {
       onBackgroundChange({
         type: 'animated',
         config: config,
-        element: canvasRef.current
+        element: canvasRef.current,
+        controls: controls,
+        performance: performance
       });
     }
-  }, [config, backgroundManager, onBackgroundChange]);
+  }, [config, controls, performance, onBackgroundChange]);
+
+  // Update background when config changes
+  useEffect(() => {
+    console.log('Updating background with config:', config);
+  }, [config]);
 
   const handlePresetChange = (preset) => {
     const presetConfigs = {
@@ -220,24 +187,18 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
   };
 
   const handlePlay = () => {
-    if (backgroundManager) {
-      // backgroundManager.start();
-      setIsPlaying(true);
-    }
+    controls.play();
+    setIsPlaying(true);
   };
 
   const handlePause = () => {
-    if (backgroundManager) {
-      // backgroundManager.stop();
-      setIsPlaying(false);
-    }
+    controls.pause();
+    setIsPlaying(false);
   };
 
   const handleStop = () => {
-    if (backgroundManager) {
-      // backgroundManager.stop();
-      setIsPlaying(false);
-    }
+    controls.reset();
+    setIsPlaying(false);
   };
 
   const exportConfig = () => {
@@ -354,25 +315,46 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
           {/* Preview Canvas */}
           {showPreview && (
             <div className="relative">
-              <canvas
-                ref={canvasRef}
-                className="w-full h-48 bg-gray-900 rounded-lg border"
-                style={{ opacity: config.opacity }}
-              />
-              
+              <div className="w-full h-48 bg-gray-900 rounded-lg border overflow-hidden">
+                <AnimatedBackground
+                  animationName={config.animation}
+                  theme={config.theme}
+                  animationControls={controls}
+                  enablePerformanceMonitoring={true}
+                  adaptivePerformance={config.enableAI}
+                  fps={60}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: config.opacity
+                  }}
+                />
+              </div>
+
               {/* Performance Metrics Overlay */}
               <div className="absolute top-2 right-2 bg-black/50 text-white text-xs p-2 rounded">
-                <div>FPS: {metrics.fps}</div>
-                <div>Particles: {metrics.particleCount}</div>
-                <div>Memory: {metrics.memoryUsage}MB</div>
+                <div>FPS: {performance.fps || 60}</div>
+                <div>Particles: {config.particleCount}</div>
+                <div>Memory: {performance.memoryUsage || 0}MB</div>
+                <div>Level: {performance.performanceLevel || 'good'}</div>
               </div>
-              
+
               {/* Status Indicator */}
               <div className="absolute top-2 left-2">
                 <Badge variant={isPlaying ? "default" : "secondary"}>
                   {isPlaying ? 'Playing' : 'Paused'}
                 </Badge>
               </div>
+
+              {/* Loading Indicator */}
+              {isLoading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="text-white">Loading...</div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -408,7 +390,12 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
               </div>
               
               <div className="grid grid-cols-2 gap-2">
-                {Object.entries(availableOptions.presets).map(([key, description]) => (
+                {Object.entries({
+                  gaming: 'High-performance gaming experience',
+                  portfolio: 'Professional portfolio background',
+                  party: 'Vibrant and dynamic effects',
+                  minimal: 'Clean minimal design'
+                }).map(([key, description]) => (
                   <Button
                     key={key}
                     variant={config.preset === key ? "default" : "outline"}
@@ -444,7 +431,7 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableOptions.animations.map((animation) => (
+                  {availableAnimations.map((animation) => (
                     <SelectItem key={animation} value={animation}>
                       {animation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </SelectItem>
@@ -494,24 +481,24 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
           </TabsContent>
           
           <TabsContent value="theme" className="space-y-4">
-            <div className="space-y-2">
-              <Label>Color Theme</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {availableOptions.themes.map((theme) => (
-                  <Button
-                    key={theme}
-                    variant={config.theme === theme ? "default" : "outline"}
-                    className="h-auto p-3"
-                    onClick={() => setConfig(prev => ({ ...prev, theme }))}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-4 w-4" />
-                      <span className="capitalize">{theme}</span>
-                    </div>
-                  </Button>
-                ))}
+                          <div className="space-y-2">
+                <Label>Color Theme</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {availableThemes.map((theme) => (
+                    <Button
+                      key={theme}
+                      variant={config.theme === theme ? "default" : "outline"}
+                      className="h-auto p-3"
+                      onClick={() => setConfig(prev => ({ ...prev, theme }))}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Palette className="h-4 w-4" />
+                        <span className="capitalize">{theme}</span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
           </TabsContent>
           
           <TabsContent value="advanced" className="space-y-4">
@@ -530,7 +517,7 @@ const AnimatedBackgroundSelector = ({ onBackgroundChange }) => {
                     onCheckedChange={(checked) =>
                       setConfig(prev => ({ ...prev, enableAudio: checked }))
                     }
-                    disabled={!availableOptions.capabilities.audioContext}
+                    disabled={!(window.AudioContext || window.webkitAudioContext)}
                   />
                 </div>
               </div>

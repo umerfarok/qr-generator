@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { 
-  AnimatedBackground, 
-  LayeredBackground, 
-  useAnimationControls, 
+import {
+  AnimatedBackground,
+  LayeredBackground,
+  useAnimationControls,
   usePerformanceMonitor,
-  THEMES 
+  THEMES
 } from 'animated-backgrounds';
+import ErrorBoundary from './components/ErrorBoundary';
 import { QRCode } from 'react-qrcode-logo';
 import { jsPDF } from 'jspdf';
 import * as htmlToImage from 'html-to-image';
@@ -22,12 +23,12 @@ function App() {
   // App mode switcher
   const [appMode, setAppMode] = useState('qr-generator'); // 'qr-generator' or 'feature-demo'
 
-  // Available animations and themes - memoized to prevent re-renders
+  // Available animations from package - memoized to prevent re-renders
   const animations = useMemo(() => [
-    'autumnLeaves', 'oceanWaves', 'neuralNetwork', 'dnaHelix', 'geometricShapes',
-    'fallingFoodFiesta', 'starryNight', 'floatingBubbles', 'gradientWave', 
-    'particleNetwork', 'galaxySpiral', 'fireflies', 'matrixRain', 'rainbowWaves', 
-    'quantumField', 'electricStorm', 'cosmicDust', 'neonPulse', 'auroraBorealis'
+    'starryNight', 'floatingBubbles', 'gradientWave', 'particleNetwork',
+    'galaxySpiral', 'rainbowWaves', 'geometricShapes', 'fireflies',
+    'matrixRain', 'quantumField', 'electricStorm', 'cosmicDust',
+    'neonPulse', 'auroraBorealis', 'oceanWaves', 'autumnLeaves', 'dnaHelix'
   ], []);
 
   const getRandomAnimation = useCallback((exclude) => {
@@ -38,8 +39,9 @@ function App() {
 
   // State management for QR Generator - Enhanced with better defaults
   const [animationName, setAnimationName] = useState('particleNetwork'); // Better particle design than floatingBubbles
-  const [selectedTheme, setSelectedTheme] = useState('cyberpunk'); // More vibrant than gaming
+  const [selectedTheme, setSelectedTheme] = useState('cyberpunk'); // Available theme from package
   const [backgroundMode, setBackgroundMode] = useState('themed'); // 'themed', 'interactive', 'layered', 'controlled'
+  const [isLoadingAnimation, setIsLoadingAnimation] = useState(false);
   const [url, setUrl] = useState('https://animated-backgrounds-v2.com'); // Better example URL
   const [qrVisible, setQrVisible] = useState(false);
   const [color, setColor] = useState('#000000');
@@ -48,15 +50,10 @@ function App() {
   const [errorCorrection, setErrorCorrection] = useState('H');
   const [qrKey, setQrKey] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Enhanced v2.0 features state
-  const [enhancedMode, setEnhancedMode] = useState(true);
-  const [particleCount, setParticleCount] = useState(150); // Better particle count
-  const [animationSpeed, setAnimationSpeed] = useState(1.2); // Slightly faster
+  // Enhanced v2.0 features state - keeping only what's actually used
   const [interactionStrength, setInteractionStrength] = useState(0.8);
-  const [enablePhysics, setEnablePhysics] = useState(false);
-  const [enableAI, setEnableAI] = useState(true);
-  const [showPerformance, setShowPerformance] = useState(false);
 
   // New v2.0 hooks
   const controls = useAnimationControls({
@@ -64,10 +61,10 @@ function App() {
     autoPlay: true
   });
 
-  // const performance = usePerformanceMonitor({
-  //   warningThreshold: 30,
-  //   autoOptimize: true
-  // });
+  const performance = usePerformanceMonitor({
+    warningThreshold: 30,
+    autoOptimize: true
+  });
 
   // Memoize stable objects to prevent recreation
   const interactionConfig = useMemo(() => ({
@@ -83,80 +80,99 @@ function App() {
     { animation: 'cosmicDust', opacity: 0.5, blendMode: 'overlay', speed: 0.8 }
   ], []);
 
-  // QR Code state - Enhanced defaults
-  const [text, setText] = useState('https://animated-backgrounds-v2.com'); // Better default URL
+  // QR Code state - keeping only what's used
   const [qrCodeDataURL, setQRCodeDataURL] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   
-  // QR Code options - Enhanced defaults
+  // QR Code options - keeping only what's used
   const [options, setOptions] = useState({
     errorCorrectionLevel: 'M',
     type: 'image/png',
     quality: 0.92,
     margin: 1,
     color: {
-      dark: '#1a1a1a', // Slightly softer black
+      dark: '#1a1a1a',
       light: '#FFFFFF'
     },
-    width: 300, // Larger default size
+    width: 300,
     scale: 4
   });
 
-  // Background state - Enhanced defaults
-  const [backgroundConfig, setBackgroundConfig] = useState({
-    enabled: true,
-    type: 'animated', // Start with animated instead of static
-    staticColor: '#f8fafc',
-    gradientFrom: '#3b82f6',
-    gradientTo: '#8b5cf6',
-    animatedConfig: null
-  });
+  // Background state is handled by backgroundMode, no need for separate config
 
-  // Preview state
-  const [previewMode, setPreviewMode] = useState('desktop'); // 'desktop', 'tablet', 'mobile'
-  const [showPreview, setShowPreview] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Refs
-  const backgroundCanvasRef = useRef(null);
+  // Refs - keeping only what's used
   const qrDisplayRef = useRef(null);
 
+  // Handle loading states for animation changes
+  useEffect(() => {
+    setIsLoadingAnimation(true);
+    const timer = setTimeout(() => {
+      setIsLoadingAnimation(false);
+    }, 500); // Show loading for 500ms to ensure smooth transition
+    return () => clearTimeout(timer);
+  }, [animationName, selectedTheme, backgroundMode]);
+
   const handleGenerateQR = () => {
-    if (url.trim() !== '') {
-      setQrVisible(true);
-      setQrKey(prev => prev + 1);
-    } else {
-      alert('Please enter a valid URL.');
+    if (url.trim() === '') {
+      setErrorMessage('Please enter a valid URL to generate a QR code.');
+      return;
     }
+
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      setErrorMessage('URL must start with http:// or https://');
+      return;
+    }
+
+    setErrorMessage(''); // Clear any previous errors
+    setQrVisible(true);
+    setQrKey(prev => prev + 1);
   };
 
   const handleDownloadImage = () => {
     const qrElement = document.getElementById('qr-code');
+    if (!qrElement) {
+      setErrorMessage('QR code not found. Please generate a QR code first.');
+      return;
+    }
+
     htmlToImage.toPng(qrElement)
       .then((dataUrl) => {
         const link = document.createElement('a');
         link.download = 'qr-code.png';
         link.href = dataUrl;
         link.click();
+        setErrorMessage(''); // Clear any previous errors
       })
       .catch((error) => {
         console.error('Error downloading image:', error);
+        setErrorMessage('Failed to download QR code image. Please try again.');
       });
   };
 
   const handleDownloadPDF = () => {
     const qrElement = document.getElementById('qr-code');
+    if (!qrElement) {
+      setErrorMessage('QR code not found. Please generate a QR code first.');
+      return;
+    }
+
     htmlToImage.toPng(qrElement)
       .then((dataUrl) => {
-        const pdf = new jsPDF();
-        const imgProps = pdf.getImageProperties(dataUrl);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('qr-code.pdf');
+        try {
+          const pdf = new jsPDF();
+          const imgProps = pdf.getImageProperties(dataUrl);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          pdf.save('qr-code.pdf');
+          setErrorMessage(''); // Clear any previous errors
+        } catch (pdfError) {
+          console.error('Error creating PDF:', pdfError);
+          setErrorMessage('Failed to create PDF. Please try the PNG download instead.');
+        }
       })
       .catch((error) => {
         console.error('Error generating PDF:', error);
+        setErrorMessage('Failed to process QR code for PDF. Please try the PNG download instead.');
       });
   };
 
@@ -167,65 +183,112 @@ function App() {
 
   // Render different background modes for QR Generator
   const renderQRBackground = useCallback(() => {
-    switch (backgroundMode) {
-      case 'interactive':
-        return (
-          <AnimatedBackground 
-            key="interactive-bg"
-            animationName="particleNetwork"
-            interactive={true}
-            interactionConfig={interactionConfig}
-            theme={selectedTheme}
-            enablePerformanceMonitoring={false}
-          />
-        );
-      
-      case 'layered':
-        return (
-          <LayeredBackground 
-            key="layered-bg"
-            layers={layeredBackgroundLayers}
-            enablePerformanceMonitoring={false}
-          />
-        );
-      
-      case 'controlled':
-        return (
-          <AnimatedBackground 
-            key="controlled-bg"
-            animationName="galaxySpiral"
-            animationControls={controls}
-            theme={selectedTheme}
-            enablePerformanceMonitoring={false}
-          />
-        );
-      
-      default: // 'themed'
-  return (
-          <AnimatedBackground 
-            key="themed-bg"
-            animationName={animationName}
-            theme={selectedTheme}
-            enablePerformanceMonitoring={false}
-            adaptivePerformance={true}
-          />
-        );
-    }
+    const getFallbackMessage = (mode) => {
+      switch (mode) {
+        case 'interactive':
+          return "Failed to load interactive particle animation. Try selecting a different theme or animation.";
+        case 'layered':
+          return "Failed to load layered background animation. Try a simpler animation mode.";
+        case 'controlled':
+          return "Failed to load controlled animation. Try a different animation or theme.";
+        default:
+          return "Failed to load themed animation. Try selecting a different animation or theme.";
+      }
+    };
+
+    return (
+      <ErrorBoundary fallbackMessage={getFallbackMessage(backgroundMode)}>
+        {(() => {
+          switch (backgroundMode) {
+            case 'interactive':
+              return (
+                <AnimatedBackground
+                  key="interactive-bg"
+                  animationName="particleNetwork"
+                  interactive={true}
+                  interactionConfig={interactionConfig}
+                  theme={selectedTheme}
+                  enablePerformanceMonitoring={true}
+                  adaptivePerformance={true}
+                />
+              );
+
+            case 'layered':
+              return (
+                <LayeredBackground
+                  key="layered-bg"
+                  layers={layeredBackgroundLayers}
+                  enablePerformanceMonitoring={true}
+                />
+              );
+
+            case 'controlled':
+              return (
+                <AnimatedBackground
+                  key="controlled-bg"
+                  animationName="galaxySpiral"
+                  animationControls={controls}
+                  theme={selectedTheme}
+                  enablePerformanceMonitoring={true}
+                  adaptivePerformance={true}
+                />
+              );
+
+            default: // 'themed'
+              return (
+                <AnimatedBackground
+                  key="themed-bg"
+                  animationName={animationName}
+                  theme={selectedTheme}
+                  enablePerformanceMonitoring={true}
+                  adaptivePerformance={true}
+                />
+              );
+          }
+        })()}
+      </ErrorBoundary>
+    );
   }, [backgroundMode, selectedTheme, animationName, controls, interactionConfig, layeredBackgroundLayers]);
 
   // Render QR Generator App
   const renderQRGenerator = () => (
     <div>
       {renderQRBackground()}
-      
+
+      {/* Loading Overlay */}
+      {isLoadingAnimation && (
+        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-sm">Loading animation...</p>
+          </div>
+        </div>
+      )}
+
       <div className="relative min-h-screen flex items-center justify-center p-4">
         {/* App Mode Toggle */}
-        <button
-          onClick={() => setAppMode('feature-demo')}
-          className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          🎨 Feature Demo
-        </button>
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <button
+            onClick={() => setAppMode('qr-generator')}
+            className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+              appMode === 'qr-generator'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white/20 backdrop-blur text-white hover:bg-white/30'
+            }`}
+          >
+            🎯 QR Generator
+          </button>
+          <button
+            onClick={() => setAppMode('feature-demo')}
+            className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+              appMode === 'feature-demo'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/20 backdrop-blur text-white hover:bg-white/30'
+            }`}
+          >
+            🎨 Feature Demo
+          </button>
+        </div>
 
         {/* Toggle Controls Button */}
         <button
@@ -341,29 +404,29 @@ function App() {
             )}
 
             {/* Performance Monitor */}
-            {/* {performance && (
+            {performance && (
               <div className="mb-3 text-xs">
                 <Label className="text-white">📊 Performance:</Label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
-                  <div>FPS: <span className="text-green-400">{performance.fps}</span></div>
-                  <div>Avg: <span className="text-blue-400">{performance.avgFps}</span></div>
+                  <div>FPS: <span className="text-green-400">{performance.fps || 60}</span></div>
+                  <div>Avg: <span className="text-blue-400">{performance.avgFps || 60}</span></div>
                   <div className="col-span-2">
-                    Level: <span className={`${
-                      performance.performanceLevel === 'excellent' ? 'text-green-400' :
-                      performance.performanceLevel === 'good' ? 'text-blue-400' :
-                      performance.performanceLevel === 'fair' ? 'text-yellow-400' : 'text-red-400'
-                    }`}>
-                      {performance.performanceLevel}
+                    Level: <span className={`
+                      ${performance.performanceLevel === 'excellent' ? 'text-green-400' :
+                        performance.performanceLevel === 'good' ? 'text-blue-400' :
+                        performance.performanceLevel === 'fair' ? 'text-yellow-400' : 'text-red-400'}
+                    `}>
+                      {performance.performanceLevel || 'good'}
                     </span>
                   </div>
-                  {performance.warnings.length > 0 && (
+                  {performance.warnings && performance.warnings.length > 0 && (
                     <div className="col-span-2 text-yellow-400">
                       ⚠️ {performance.warnings[0]}
                     </div>
                   )}
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* Mode Descriptions */}
             <div className="text-xs text-gray-300">
